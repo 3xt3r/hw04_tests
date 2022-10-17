@@ -10,18 +10,18 @@ class PostsURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        #Создание пользователя
+        # Создание пользователя
         cls.user = User.objects.create_user(username='test_user')
         cls.user_not_author = User.objects.create_user(
             username='test_user_not_author'
         )
-        #Создание группы
+        # Создание группы
         cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='test-slug',
             description='Тестовое описание',
         )
-        #Создание поста
+        # Создание поста
         cls.post = Post.objects.create(
             author=cls.user,
             group=cls.group,
