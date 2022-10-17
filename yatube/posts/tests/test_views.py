@@ -96,7 +96,7 @@ class PostsViewsTests(TestCase):
         )
 
     def test_group_posts_page_show_correct_context(self):
-        """Шаблон group_list сформирован с правильным контекстом."""
+        """Шаблон group_list сформирован с правильным контекстом"""
         group = PostsViewsTests.group
         response = self.auth_client.get(
             reverse('posts:group_posts', kwargs={'slug': group.slug})
@@ -117,7 +117,7 @@ class PostsViewsTests(TestCase):
         )
 
     def test_profile_page_show_correct_context(self):
-        """Шаблон profile сформирован с правильным контекстом."""
+        """Шаблон profile сформирован с правильным контекстом"""
         posts_count = Post.objects.count()
         user = PostsViewsTests.user
         response = self.auth_client.get(
@@ -141,7 +141,7 @@ class PostsViewsTests(TestCase):
         self.assertEqual(context_posts_count, posts_count)
 
     def test_post_detail_page_show_correct_context(self):
-        """Шаблон post_detail сформирован с правильным контекстом."""
+        """Шаблон post_detail сформирован с правильным контекстом"""
         posts_count = Post.objects.count()
         post = PostsViewsTests.post
         response = self.auth_client.get(
@@ -163,7 +163,7 @@ class PostsViewsTests(TestCase):
         self.assertEqual(context_posts_count, posts_count)
 
     def test_post_create_show_correct_context(self):
-        """Шаблон create_post (create) сформирован с правильным контекстом."""
+        """Шаблон create_post (create) сформирован с правильным контекстом"""
         response = self.auth_client.get(reverse('posts:post_create'))
 
         form_fields = {
@@ -177,7 +177,7 @@ class PostsViewsTests(TestCase):
                 self.assertIsInstance(form_field, expected)
 
     def test_post_edit_page_show_correct_context(self):
-        """Шаблон create_post (edit) сформирован с правильным контекстом."""
+        """Шаблон create_post (edit) сформирован с правильным контекстом"""
         post = PostsViewsTests.post
         response = self.auth_client.get(
             reverse('posts:post_edit', kwargs={'post_id': post.pk})
@@ -196,7 +196,7 @@ class PostsViewsTests(TestCase):
         self.assertEqual(context_post_id, 13)
 
     def test_posts_pages_correct_paginator_work(self):
-        """Проверка работы паджинатора в шаблонах приложения Posts."""
+        """Проверка работы паджинатора в шаблонах"""
         group = PostsViewsTests.group2
         user = PostsViewsTests.user
         PAGE_1_POSTS = 10
@@ -222,8 +222,7 @@ class PostsViewsTests(TestCase):
                 )
 
     def test_post_correct_appear(self):
-        ("""Проверка, что созданный пост появляется на """
-         """нужных страницах.""")
+        """Проверка созданного поста"""
         group = PostsViewsTests.group
         user = PostsViewsTests.user
         post = PostsViewsTests.post
