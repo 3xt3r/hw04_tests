@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}
+Пост {{ post_info.text|truncatewords:30 }}
+{% endblock %}
+{% block content %}
+<div class="row">
+  <aside class="col-12 col-md-3">
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+        Дата публикации: {{ post_info.pub_date|date:"d E Y" }}
+      </li>      
+        <li class="list-group-item">
+          {% if post_info.group %}  
+          Группа: {{ post_info.group.title }}              
+          <a href="{% url 'posts:group_posts' post_info.group.slug %}">
+            Все записи группы</a>          
+        </li>
+      {% endif %}
+      <li class="list-group-item">
+        Автор: {{ post_info.author.get_full_name }}
+      </li>   
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        Всего постов автора: {{ post_info.author.posts.count }}
+      </li>
+      
+      <li class="list-group-item">
+        {% if post_info.author %}
+        <a href="{% url 'posts:profile' post_info.author.username %}">
+        Все посты пользователя
+        </a> 
+        {% endif %}
+      </li>
+    </ul>
+
+  </aside>
+  <article class="col-12 col-md-9">
+    <p>
+      {{ post_info.text }}
+    </p>  
+    {% if request.user == post_info.author %}
+      <a class="btn btn-primary" href="{% url 'posts:post_edit' post_info.id %}">  
+        Редактировать запись
+      </a>
+    {% endif %}
+  </article>
+</div>
+{% endblock %}
