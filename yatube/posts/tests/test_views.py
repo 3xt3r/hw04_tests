@@ -242,7 +242,7 @@ class TestPaginator(TestCase):
         post: list = []
 
         for i in range(NUMBER_OF_POSTS + TEST_POSTS_OFFSET):
-            post.append(Post(text=f'Тестовый текст',
+            post.append(Post(text=f'{"Тестовый текст"}',
                                   group=self.group,
                                   author=self.user))
         Post.objects.bulk_create(post)
