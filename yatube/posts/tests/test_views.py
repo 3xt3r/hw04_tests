@@ -1,5 +1,5 @@
 from time import sleep
-
+from yatube.settings import NUMBER_OF_POSTS
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -10,6 +10,7 @@ from ..models import Group, Post
 User = get_user_model()
 
 TEST_POST_TEXT = 'Тестовый пост'
+TEST_POSTS_OFFSET = NUMBER_OF_POSTS - 1
 
 
 class PostsViewsTests(TestCase):
@@ -28,7 +29,7 @@ class PostsViewsTests(TestCase):
             description='Тестовое описание 2',
         )
 
-        for i in range(12):
+        for i in range(NUMBER_OF_POSTS + TEST_POSTS_OFFSET):
             Post.objects.create(
                 author=cls.user,
                 group=cls.group2,
@@ -44,7 +45,6 @@ class PostsViewsTests(TestCase):
 
     def setUp(self):
         self.auth_client = Client()
-
         self.auth_client.force_login(PostsViewsTests.user)
 
     def test_correct_templates(self):
@@ -84,12 +84,12 @@ class PostsViewsTests(TestCase):
         response = self.auth_client.get(reverse('posts:index'))
 
         context_post = response.context['page_obj'][0]
-        post_author = context_post.author.username
-        post_group = context_post.group.title
+        post_author = context_post.author
+        post_group = context_post.group
         post_text = context_post.text
 
-        self.assertEqual(post_author, 'test_user')
-        self.assertEqual(post_group, 'Тестовая группа')
+        self.assertEqual(post_author, self.user)
+        self.assertEqual(post_group, self.group)
         self.assertEqual(
             post_text,
             TEST_POST_TEXT
@@ -103,14 +103,14 @@ class PostsViewsTests(TestCase):
         )
 
         context_post = response.context['page_obj'][0]
-        post_author = context_post.author.username
-        post_group = context_post.group.title
+        post_author = context_post.author
+        post_group = context_post.group
         post_text = context_post.text
         context_group = response.context['group'].title
 
-        self.assertEqual(post_author, 'test_user')
-        self.assertEqual(post_group, 'Тестовая группа')
-        self.assertEqual(context_group, 'Тестовая группа')
+        self.assertEqual(post_author, self.user)
+        self.assertEqual(post_group, self.group)
+        self.assertEqual(context_group, self.group.title)
         self.assertEqual(
             post_text,
             TEST_POST_TEXT
@@ -125,15 +125,15 @@ class PostsViewsTests(TestCase):
         )
 
         context_post = response.context['page_obj'][0]
-        post_author = context_post.author.username
-        post_group = context_post.group.title
+        post_author = context_post.author
+        post_group = context_post.group
         post_text = context_post.text
         context_author = response.context['author'].username
         context_posts_count = response.context['posts_count']
 
-        self.assertEqual(post_author, 'test_user')
+        self.assertEqual(post_author, self.user)
         self.assertEqual(context_author, 'test_user')
-        self.assertEqual(post_group, 'Тестовая группа')
+        self.assertEqual(post_group, self.group)
         self.assertEqual(
             post_text,
             TEST_POST_TEXT
@@ -149,13 +149,13 @@ class PostsViewsTests(TestCase):
         )
 
         context_post = response.context['post_info']
-        post_author = context_post.author.username
-        post_group = context_post.group.title
+        post_author = context_post.author
+        post_group = context_post.group
         post_text = context_post.text
         context_posts_count = response.context['posts_count']
 
-        self.assertEqual(post_author, 'test_user')
-        self.assertEqual(post_group, 'Тестовая группа')
+        self.assertEqual(post_author, self.user)
+        self.assertEqual(post_group, self.group)
         self.assertEqual(
             post_text,
             TEST_POST_TEXT
@@ -193,33 +193,7 @@ class PostsViewsTests(TestCase):
             with self.subTest(value=value):
                 form_field = response.context.get('form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
-        self.assertEqual(context_post_id, 13)
-
-    def test_posts_pages_correct_paginator_work(self):
-        """Проверка работы паджинатора в шаблонах"""
-        group = PostsViewsTests.group2
-        user = PostsViewsTests.user
-        PAGE_1_POSTS = 10
-
-        urls_page2posts_names = {
-            reverse('posts:index'): 3,
-            reverse('posts:group_posts', kwargs={'slug': group.slug}): 2,
-            reverse('posts:profile', kwargs={'username': user.username}): 3,
-        }
-
-        for page, page_2_posts in urls_page2posts_names.items():
-            with self.subTest(page=page):
-                response_page_1 = self.auth_client.get(page)
-                response_page_2 = self.auth_client.get(page + '?page=2')
-
-                self.assertEqual(
-                    len(response_page_1.context['page_obj']),
-                    PAGE_1_POSTS
-                )
-                self.assertEqual(
-                    len(response_page_2.context['page_obj']),
-                    page_2_posts
-                )
+        self.assertEqual(context_post_id, NUMBER_OF_POSTS + TEST_POSTS_OFFSET+1)
 
     def test_post_correct_appear(self):
         """Проверка созданного поста"""
@@ -251,3 +225,38 @@ class PostsViewsTests(TestCase):
         context_post = response.context['page_obj'][0]
 
         self.assertNotEqual(context_post, post)
+
+class TestPaginator(TestCase):
+    @classmethod
+    def setUp(self):
+        self.user = User.objects.create_user(username='authorized')
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
+        self.group = Group.objects.create(title='Тестовая группа',
+                                          slug='test_group')
+        post: list = []
+        
+        for i in range(NUMBER_OF_POSTS + TEST_POSTS_OFFSET):
+            post.append(Post(text=f'Тестовый текст',
+                                  group=self.group,
+                                  author=self.user))
+        Post.objects.bulk_create(post)
+        
+    def test_posts_pages_paginator(self):
+        
+        urls_page2posts_names = {
+            reverse('posts:index'),
+            reverse('posts:group_posts', kwargs={'slug': self.group.slug}),
+            reverse('posts:profile', kwargs={'username': self.user.username}), 
+        } 
+        
+        for page in urls_page2posts_names:
+            response1 = self.authorized_client.get(page)
+            response2 = self.authorized_client.get(page + '?page=2')
+            count_posts1 = len(response1.context['page_obj'])
+            count_posts2 = len(response2.context['page_obj'])
+            
+            self.assertEqual(count_posts1,
+                             NUMBER_OF_POSTS)
+            self.assertEqual(count_posts2,
+                             TEST_POSTS_OFFSET)
