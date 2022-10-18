@@ -193,7 +193,11 @@ class PostsViewsTests(TestCase):
             with self.subTest(value=value):
                 form_field = response.context.get('form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
-        self.assertEqual(context_post_id, NUMBER_OF_POSTS + TEST_POSTS_OFFSET+1)
+        self.assertEqual(
+            context_post_id,
+            NUMBER_OF_POSTS
+            + TEST_POSTS_OFFSET
+            + 1)
 
     def test_post_correct_appear(self):
         """Проверка созданного поста"""
@@ -226,6 +230,7 @@ class PostsViewsTests(TestCase):
 
         self.assertNotEqual(context_post, post)
 
+
 class TestPaginator(TestCase):
     @classmethod
     def setUp(self):
@@ -235,27 +240,27 @@ class TestPaginator(TestCase):
         self.group = Group.objects.create(title='Тестовая группа',
                                           slug='test_group')
         post: list = []
-        
+
         for i in range(NUMBER_OF_POSTS + TEST_POSTS_OFFSET):
             post.append(Post(text=f'Тестовый текст',
                                   group=self.group,
                                   author=self.user))
         Post.objects.bulk_create(post)
-        
+
     def test_posts_pages_paginator(self):
-        
+
         urls_page2posts_names = {
             reverse('posts:index'),
             reverse('posts:group_posts', kwargs={'slug': self.group.slug}),
-            reverse('posts:profile', kwargs={'username': self.user.username}), 
-        } 
-        
+            reverse('posts:profile', kwargs={'username': self.user.username}),
+        }
+
         for page in urls_page2posts_names:
             response1 = self.authorized_client.get(page)
             response2 = self.authorized_client.get(page + '?page=2')
             count_posts1 = len(response1.context['page_obj'])
             count_posts2 = len(response2.context['page_obj'])
-            
+
             self.assertEqual(count_posts1,
                              NUMBER_OF_POSTS)
             self.assertEqual(count_posts2,
